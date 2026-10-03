@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Search — SQLi Lab</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px; background:#0f1115; color:#e6e6e6; }
+    input { padding:8px; width:70%; background:#1b1e24; border:1px solid #333; color:#e6e6e6; border-radius:4px; }
+    button { padding:8px 16px; background:#2d6cdf; border:none; color:white; border-radius:4px; cursor:pointer; }
+    table { width:100%; border-collapse: collapse; margin-top:16px; }
+    td, th { padding:8px; border-bottom:1px solid #333; text-align:left; }
+    pre { white-space:pre-wrap; word-break:break-all; background:#262a33; padding:10px; border-radius:6px; }
+    .error { color:#ff6b6b; }
+    a { color:#6fb3ff; }
+  </style>
+</head>
+<body>
+  <p><a href="/">&larr; back</a></p>
+  <h1>Product Search</h1>
+  <form method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="category, e.g. electronics">
+    <button type="submit">Search</button>
+  </form>
+
+  {% if error %}
+    <p class="error">DB error: {{ error }}</p>
+  {% endif %}
+
+  {% if query_shown %}
+    <p><strong>Query executed (lab-only visibility):</strong></p>
+    <pre>{{ query_shown }}</pre>
+  {% endif %}
+
+  {% if rows %}
+  <table>
+    <tr><th>Name</th><th>Category</th><th>Price</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  <p style="margin-top:30px; opacity:0.7; font-size:13px;">
+    Hint to try: <code>' UNION SELECT id, username, password FROM users --</code>
+  </p>
+</body>
+</html>
