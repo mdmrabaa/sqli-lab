@@ -7,6 +7,9 @@ app.secret_key = os.environ.get("SECRET_KEY", "lab-dev-secret-change-me")
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "lab.db")
 
+# Toggle: set SECURE_MODE=1 to enable hardened queries
+SECURE_MODE = os.environ.get("SECURE_MODE", "0") == "1"
+
 
 def get_db():
     if "db" not in g:
@@ -85,14 +88,17 @@ def login():
         username = request.form.get("username", "")
         password = request.form.get("password", "")
 
-        # VULNERABLE: raw string concatenation, no parameterization.
-        query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
         db = get_db()
-        try:
-            cur = db.execute(query)
-            row = cur.fetchone()
-        except sqlite3.Error as e:
-            return render_template("login.html", error=f"SQL error: {e}")
+        if SECURE_MODE:
+            # HARDENED: parameterized query
+            row = db.execute(
+                "SELECT * FROM users WHERE username = ? AND password = ?",
+                (username, password),
+            ).fetchone()
+        else:
+            # VULNERABLE: raw string concatenation
+            query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+            row = db.execute(query).fetchone()
 
         if row:
             session["username"] = row["username"]
@@ -113,7 +119,6 @@ def logout():
 
 @app.route("/search")
 def search():
-    # Require login before searching
     if not session.get("username"):
         return redirect(url_for("login"))
 
@@ -121,13 +126,24 @@ def search():
     results = []
     error = None
     if q:
-        # VULNERABLE: raw string concatenation, no parameterization.
-        query = f"SELECT id, name, category FROM products WHERE category = '{q}'"
         db = get_db()
-        try:
-            results = db.execute(query).fetchall()
-        except sqlite3.Error as e:
-            error = f"SQL error: {e}"
+        if SECURE_MODE:
+            # HARDENED: allow-list + parameterized query
+            ALLOWED_CATEGORIES = {"electronics", "home"}
+            if q in ALLOWED_CATEGORIES:
+                results = db.execute(
+                    "SELECT id, name, category FROM products WHERE category = ?",
+                    (q,),
+                ).fetchall()
+            else:
+                error = "Unknown category"
+        else:
+            # VULNERABLE: raw string concatenation
+            query = f"SELECT id, name, category FROM products WHERE category = '{q}'"
+            try:
+                results = db.execute(query).fetchall()
+            except sqlite3.Error as e:
+                error = f"SQL error: {e}"
     return render_template("search.html", q=q, results=results, error=error)
 
 
@@ -138,9 +154,7 @@ def reset():
 
 
 # ---------------------------------------------------------------------------
-# Admin panel — only reachable when logged in with role == 'admin'.
-# This part is intentionally NOT injectable: it's the feature you build
-# and defend, not the exercise. Auth is checked server-side via session.
+# Admin panel
 # ---------------------------------------------------------------------------
 
 def admin_required(view):
@@ -173,8 +187,6 @@ def admin_add_user():
 
     if username and password:
         db = get_db()
-        # Parameterized on purpose — this is an admin-only internal action,
-        # not the vulnerability under test.
         db.execute(
             "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
             (username, password, role),
@@ -201,10 +213,10 @@ def admin_add_product():
 
     if name and category:
         db = get_db()
-        # VULNERABLE: raw string concatenation — for teaching purposes.
-        # In production, use parameterized queries here too.
-        query = f"INSERT INTO products (name, category) VALUES ('{name}', '{category}')"
-        db.execute(query)
+        db.execute(
+            "INSERT INTO products (name, category) VALUES (?, ?)",
+            (name, category),
+        )
         db.commit()
 
     return redirect(url_for("admin_dashboard"))

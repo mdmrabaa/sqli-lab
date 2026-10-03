@@ -94,6 +94,55 @@ count first, e.g. with `' ORDER BY 4 --` to find where it breaks).
 Run the exact same payloads from Section 3 against the hardened
 deployment and confirm both fail — that's the defense deliverable.
 
+## 5. Live Demo: Switch Between Vulnerable and Hardened Mode
+
+The `app/` version includes a built-in toggle so you can switch
+between vulnerable and hardened mode **without changing code** —
+perfect for live classroom demos.
+
+### How to switch
+
+**Vulnerable mode (default):**
+```bash
+cd app
+python app.py
+```
+
+**Hardened mode:**
+```bash
+cd app
+set SECURE_MODE=1
+python app.py
+```
+
+**Or with a single command (Windows PowerShell):**
+```powershell
+cd app
+$env:SECURE_MODE="1"; python app.py
+```
+
+**Or on Linux/Mac:**
+```bash
+cd app
+SECURE_MODE=1 python app.py
+```
+
+### Demo flow for students
+
+1. Start in **vulnerable mode** — run the payloads, show they work
+2. Stop the server
+3. Start in **hardened mode** (`SECURE_MODE=1`) — run the **same payloads**
+4. Show students the payloads now fail
+5. Open the code and highlight the one-line difference:
+   ```python
+   # Vulnerable
+   query = f"SELECT * FROM users WHERE username = '{username}'"
+   db.execute(query)
+
+   # Hardened
+   db.execute("SELECT * FROM users WHERE username = ?", (username,))
+   ```
+
 ## Admin Panel
 
 Both versions include a session-based admin panel at `/admin`:
@@ -105,6 +154,7 @@ Both versions include a session-based admin panel at `/admin`:
 - **Delete products** — remove products from the catalog
 - **View products** — see the current product catalog
 - **Stats dashboard** — see total users, products, and admin count
+- **Reset database** — re-seed the database to its original state
 
 The admin panel is protected by a server-side `admin_required` decorator that
 checks `session["role"] == "admin"`. It is intentionally **not** injectable —
@@ -117,7 +167,7 @@ search without logging in, you'll be redirected to the login page.
 This teaches students that access control is a separate layer from
 input validation — both are needed for a secure app.
 
-## 5. How to Protect Against SQL Injection
+## 6. How to Protect Against SQL Injection
 
 SQL injection happens when user input is concatenated directly into
 SQL queries. Here's how to prevent it:
@@ -210,7 +260,7 @@ python app.py
 ```
 sqli-lab/
 ├── render.yaml              # Render deploy config (points at app/)
-├── app/                     # VULNERABLE version
+├── app/                     # VULNERABLE version (with SECURE_MODE toggle)
 │   ├── app.py
 │   ├── requirements.txt
 │   └── templates/
