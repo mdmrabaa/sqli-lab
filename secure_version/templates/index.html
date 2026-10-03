@@ -1,29 +1,10 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>SQLi Training Lab</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px; background:#0f1115; color:#e6e6e6; }
-    .banner { background:#5b1e1e; border:1px solid #c0392b; padding:10px 14px; border-radius:6px; margin-bottom:24px; font-size:14px; }
-    a { color:#6fb3ff; }
-    .card { background:#1b1e24; padding:16px 20px; border-radius:8px; margin-bottom:16px; }
-    code { background:#262a33; padding:2px 6px; border-radius:4px; }
-  </style>
-</head>
-<body>
-  <div class="banner">⚠ TRAINING LAB — intentionally vulnerable to SQL injection. No real data. Do not deploy publicly outside a supervised course.</div>
-  <h1>SQL Injection Training Lab</h1>
-  <div class="card">
-    <h3><a href="/login">1. Login form</a></h3>
-    <p>Classic auth-bypass injection on a raw-concatenated query.</p>
-  </div>
-  <div class="card">
-    <h3><a href="/search?q=electronics">2. Product search</a></h3>
-    <p>UNION-based injection to pull data from another table.</p>
-  </div>
-  <div class="card">
-    <p><a href="/reset">Reset database</a> to the original seed data.</p>
-  </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<h1>SQL Injection Training Lab</h1>
+<p><a href="{{ url_for('login') }}">1. Login form</a> — classic auth-bypass injection on a raw-concatenated query.</p>
+<p><a href="{{ url_for('search') }}?q=electronics">2. Product search</a> — UNION-based injection to pull data from another table.</p>
+{% if session.get('role') == 'admin' %}
+<p><a href="{{ url_for('admin_dashboard') }}">3. Admin panel</a> — manage users (visible only when logged in as admin).</p>
+{% endif %}
+<p><a href="{{ url_for('reset') }}">Reset database</a> to the original seed data.</p>
+{% endblock %}

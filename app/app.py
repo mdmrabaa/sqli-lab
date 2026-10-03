@@ -1,24 +1,11 @@
-"""
-SQLi Training Lab — INTENTIONALLY VULNERABLE
-----------------------------------------------
-This app is built for a controlled cybersecurity training programme
-(Week 1 — SQL Injection). It deliberately builds SQL queries with
-raw string concatenation so students can observe and exploit classic
-SQL injection flaws, then compare against the hardened version in
-/secure_version.
-
-DO NOT use real data, real credentials, or deploy this anywhere that
-isn't clearly marked as a training lab. Do not point automated
-scanners/attack tools at third-party infrastructure without permission.
-"""
-
 import os
 import sqlite3
-from flask import Flask, request, render_template, g
-
-DB_PATH = os.path.join(os.path.dirname(__file__), "lab.db")
+from flask import Flask, request, session, redirect, url_for, render_template, g
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "lab-dev-secret-change-me")
+
+DB_PATH = os.path.join(os.path.dirname(__file__), "lab.db")
 
 
 def get_db():
@@ -43,119 +30,164 @@ def init_db():
         DROP TABLE IF EXISTS products;
 
         CREATE TABLE users (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
             password TEXT NOT NULL,
-            role TEXT NOT NULL
+            role TEXT NOT NULL DEFAULT 'user'
         );
 
         CREATE TABLE products (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            price REAL NOT NULL
+            category TEXT NOT NULL
         );
         """
     )
     db.executemany(
         "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
         [
-            ("admin", "SuperSecret123!", "admin"),
-            ("alice", "password1", "user"),
-            ("bob", "letmein", "user"),
+            ("admin", "admin123", "admin"),
+            ("alice", "alice123", "user"),
+            ("bob", "bob123", "user"),
         ],
     )
     db.executemany(
-        "INSERT INTO products (name, category, price) VALUES (?, ?, ?)",
+        "INSERT INTO products (name, category) VALUES (?, ?)",
         [
-            ("Wireless Mouse", "electronics", 19.99),
-            ("Mechanical Keyboard", "electronics", 59.99),
-            ("Yoga Mat", "fitness", 24.50),
-            ("Water Bottle", "fitness", 12.00),
-            ("Notebook", "office", 3.50),
-            ("Desk Lamp", "office", 22.00),
+            ("Laptop", "electronics"),
+            ("Headphones", "electronics"),
+            ("Desk Lamp", "home"),
+            ("Coffee Mug", "home"),
+            ("Keyboard", "electronics"),
         ],
     )
     db.commit()
     db.close()
 
 
+if not os.path.exists(DB_PATH):
+    init_db()
+
+
+# ---------------------------------------------------------------------------
+# Public pages
+# ---------------------------------------------------------------------------
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", user=session.get("username"), role=session.get("role"))
 
 
-# ---------------------------------------------------------------------
-# VULNERABLE ENDPOINT 1: Login — classic auth-bypass SQL injection
-#   Try username:  admin' --
-#   Try username:  ' OR '1'='1
-# ---------------------------------------------------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    result = None
-    query_shown = None
+    error = None
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
 
-        # VULNERABLE: raw string concatenation, no parameterization
-        query = (
-            f"SELECT * FROM users WHERE username = '{username}' "
-            f"AND password = '{password}'"
-        )
-        query_shown = query
+        # VULNERABLE: raw string concatenation, no parameterization.
+        query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
         db = get_db()
         try:
             cur = db.execute(query)
             row = cur.fetchone()
-            if row:
-                result = f"Login success — welcome {row['username']} (role: {row['role']})"
-            else:
-                result = "Login failed — invalid credentials"
         except sqlite3.Error as e:
-            result = f"DB error: {e}"
+            return render_template("login.html", error=f"SQL error: {e}")
 
-    return render_template("login.html", result=result, query_shown=query_shown)
+        if row:
+            session["username"] = row["username"]
+            session["role"] = row["role"]
+            if row["role"] == "admin":
+                return redirect(url_for("admin_dashboard"))
+            return redirect(url_for("index"))
+        error = "Invalid credentials"
+
+    return render_template("login.html", error=error)
 
 
-# ---------------------------------------------------------------------
-# VULNERABLE ENDPOINT 2: Product search — UNION-based data extraction
-#   Try: ' UNION SELECT id, username, password, role FROM users --
-# ---------------------------------------------------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+
 @app.route("/search")
 def search():
     q = request.args.get("q", "")
-    rows = []
-    query_shown = None
+    results = []
     error = None
-
     if q:
-        # VULNERABLE: raw string concatenation, no parameterization
-        query = f"SELECT name, category, price FROM products WHERE category = '{q}'"
-        query_shown = query
+        # VULNERABLE: raw string concatenation, no parameterization.
+        query = f"SELECT id, name, category FROM products WHERE category = '{q}'"
         db = get_db()
         try:
-            cur = db.execute(query)
-            rows = cur.fetchall()
+            results = db.execute(query).fetchall()
         except sqlite3.Error as e:
-            error = str(e)
-
-    return render_template("search.html", rows=rows, q=q, query_shown=query_shown, error=error)
+            error = f"SQL error: {e}"
+    return render_template("search.html", q=q, results=results, error=error)
 
 
 @app.route("/reset")
 def reset():
-    # Convenience endpoint for the lab: re-seed the DB to a clean state
     init_db()
-    return "Database reset to initial seed data. <a href='/'>Back</a>"
+    return redirect(url_for("index"))
+
+
+# ---------------------------------------------------------------------------
+# Admin panel — only reachable when logged in with role == 'admin'.
+# This part is intentionally NOT injectable: it's the feature you build
+# and defend, not the exercise. Auth is checked server-side via session.
+# ---------------------------------------------------------------------------
+
+def admin_required(view):
+    from functools import wraps
+
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if session.get("role") != "admin":
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+
+    return wrapped
+
+
+@app.route("/admin")
+@admin_required
+def admin_dashboard():
+    db = get_db()
+    users = db.execute("SELECT id, username, role FROM users ORDER BY id").fetchall()
+    products = db.execute("SELECT id, name, category FROM products ORDER BY id").fetchall()
+    return render_template("admin.html", users=users, products=products, admin=session.get("username"))
+
+
+@app.route("/admin/users/add", methods=["POST"])
+@admin_required
+def admin_add_user():
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "").strip()
+    role = request.form.get("role", "user").strip() or "user"
+
+    if username and password:
+        db = get_db()
+        # Parameterized on purpose — this is an admin-only internal action,
+        # not the vulnerability under test.
+        db.execute(
+            "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+            (username, password, role),
+        )
+        db.commit()
+
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_user(user_id):
+    db = get_db()
+    db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    db.commit()
+    return redirect(url_for("admin_dashboard"))
 
 
 if __name__ == "__main__":
-    if not os.path.exists(DB_PATH):
-        init_db()
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
-else:
-    # When run under gunicorn (Render), make sure DB exists at import time
-    if not os.path.exists(DB_PATH):
-        init_db()
+    app.run(debug=True)

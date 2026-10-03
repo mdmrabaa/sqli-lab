@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SQLi Training Lab</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; color: #1a1a1a; }
+    .banner { background: #fff3cd; border: 1px solid #ffe08a; padding: 10px 14px; border-radius: 6px; margin-bottom: 24px; font-size: 14px; }
+    nav a { margin-right: 14px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; font-size: 14px; }
+    th { background: #f5f5f5; }
+    input { padding: 6px; margin: 4px 0; width: 100%; box-sizing: border-box; }
+    button { padding: 6px 14px; margin-top: 6px; cursor: pointer; }
+    .error { color: #b00020; font-size: 14px; }
+    form.inline { display: inline; }
+    .card { border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="banner">⚠ TRAINING LAB — intentionally vulnerable to SQL injection. No real data. Do not deploy publicly outside a supervised course.</div>
+  <nav>
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('search') }}">Search</a>
+    {% if session.get('role') == 'admin' %}
+      <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+    {% endif %}
+    {% if session.get('username') %}
+      <a href="{{ url_for('logout') }}">Logout ({{ session.get('username') }})</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">Login</a>
+    {% endif %}
+  </nav>
+  <hr>
+  {% block content %}{% endblock %}
+</body>
+</html>

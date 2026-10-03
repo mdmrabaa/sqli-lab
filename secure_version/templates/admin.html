@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Admin Panel</h1>
+<p>Logged in as <strong>{{ admin }}</strong>.</p>
+
+<div class="card">
+  <h3>Add user</h3>
+  <form method="post" action="{{ url_for('admin_add_user') }}">
+    <label>Username</label>
+    <input type="text" name="username" required>
+    <label>Password</label>
+    <input type="text" name="password" required>
+    <label>Role</label>
+    <select name="role">
+      <option value="user">user</option>
+      <option value="admin">admin</option>
+    </select>
+    <button type="submit">Add user</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Users</h3>
+  <table>
+    <tr><th>ID</th><th>Username</th><th>Role</th><th></th></tr>
+    {% for u in users %}
+    <tr>
+      <td>{{ u['id'] }}</td>
+      <td>{{ u['username'] }}</td>
+      <td>{{ u['role'] }}</td>
+      <td>
+        <form class="inline" method="post" action="{{ url_for('admin_delete_user', user_id=u['id']) }}">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h3>Products</h3>
+  <table>
+    <tr><th>ID</th><th>Name</th><th>Category</th></tr>
+    {% for p in products %}
+    <tr><td>{{ p['id'] }}</td><td>{{ p['name'] }}</td><td>{{ p['category'] }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

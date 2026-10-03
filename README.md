@@ -109,6 +109,19 @@ python app.py
 # visit http://localhost:5000
 ```
 
+## Admin Panel
+
+Both versions now include a session-based admin panel at `/admin`:
+
+- **Login** with `admin / admin123` to access it
+- **Add users** — create new accounts with a chosen role (user/admin)
+- **Delete users** — remove accounts from the panel
+- **View products** — see the current product catalog
+
+The admin panel is protected by a server-side `admin_required` decorator that
+checks `session["role"] == "admin"`. It is intentionally **not** injectable —
+it's the feature you build and defend, not the exercise.
+
 ## Files
 
 ```
@@ -118,9 +131,19 @@ sqli-lab/
 │   ├── app.py
 │   ├── requirements.txt
 │   └── templates/
+│       ├── base.html        # Shared layout (nav, banner, styles)
+│       ├── index.html
+│       ├── login.html
+│       ├── search.html
+│       └── admin.html       # Admin panel
 ├── secure_version/           # HARDENED version
 │   ├── app.py
 │   ├── requirements.txt
 │   └── templates/
+│       ├── base.html
+│       ├── index.html
+│       ├── login.html
+│       ├── search.html
+│       └── admin.html
 └── README.md
 ```
