@@ -101,12 +101,100 @@ Both versions include a session-based admin panel at `/admin`:
 - **Login** with `admin / admin123` to access it
 - **Add users** — create new accounts with a chosen role (user/admin)
 - **Delete users** — remove accounts from the panel
+- **Add products** — add new products with name and category
+- **Delete products** — remove products from the catalog
 - **View products** — see the current product catalog
 - **Stats dashboard** — see total users, products, and admin count
 
 The admin panel is protected by a server-side `admin_required` decorator that
 checks `session["role"] == "admin"`. It is intentionally **not** injectable —
 it's the feature you build and defend, not the exercise.
+
+## Search requires login
+
+The `/search` endpoint now requires authentication. If you try to
+search without logging in, you'll be redirected to the login page.
+This teaches students that access control is a separate layer from
+input validation — both are needed for a secure app.
+
+## 5. How to Protect Against SQL Injection
+
+SQL injection happens when user input is concatenated directly into
+SQL queries. Here's how to prevent it:
+
+### Rule #1: Use Parameterized Queries (Prepared Statements)
+
+**Vulnerable (string concatenation):**
+```python
+query = f"SELECT * FROM users WHERE username = '{username}'"
+db.execute(query)
+```
+
+**Safe (parameterized):**
+```python
+db.execute("SELECT * FROM users WHERE username = ?", (username,))
+```
+
+The database driver treats `?` placeholders as **data only** —
+never as SQL syntax. Even if `username` contains `' OR '1'='1`,
+it's just a string value, not executable SQL.
+
+### Rule #2: Use an ORM (Object-Relational Mapper)
+
+ORMs like SQLAlchemy automatically parameterize queries:
+```python
+# SQLAlchemy example
+user = session.query(User).filter_by(username=username).first()
+```
+
+### Rule #3: Input Validation / Allow-lists
+
+If input must match a fixed set of values, validate against an
+allow-list before using it:
+```python
+ALLOWED_CATEGORIES = {"electronics", "home"}
+
+if q not in ALLOWED_CATEGORIES:
+    return "Unknown category", 400
+```
+
+### Rule #4: Least Privilege Database Accounts
+
+Don't connect to your database as `root` or a superuser. Create
+a dedicated account with only the permissions it needs:
+```sql
+CREATE USER 'app_user'@'localhost' IDENTIFIED BY 'strong_password';
+GRANT SELECT, INSERT ON lab_db.* TO 'app_user'@'localhost';
+```
+
+### Rule #5: Escape Output (Defense in Depth)
+
+If you must display user input in HTML, escape it to prevent
+XSS (Cross-Site Scripting):
+```python
+from markupsafe import escape
+return f"<p>{escape(user_input)}</p>"
+```
+
+### Rule #6: Use Web Application Firewalls (WAF)
+
+A WAF can detect and block common injection patterns before they
+reach your application. This is a safety net, not a replacement
+for secure coding.
+
+### Rule #7: Regular Security Testing
+
+- Run automated scanners (e.g., OWASP ZAP, sqlmap) against your app
+- Perform manual penetration testing
+- Review code for string concatenation in SQL queries
+
+### Quick Reference: Vulnerable vs Safe
+
+| Vulnerable | Safe |
+|---|---|
+| `f"SELECT * FROM t WHERE col = '{val}'"` | `db.execute("SELECT * FROM t WHERE col = ?", (val,))` |
+| `f"INSERT INTO t VALUES ('{a}', '{b}')"` | `db.execute("INSERT INTO t VALUES (?, ?)", (a, b))` |
+| `f"DELETE FROM t WHERE id = {id}"` | `db.execute("DELETE FROM t WHERE id = ?", (id,))` |
 
 ## Local run (optional, if you ever want to sanity-check before pushing)
 

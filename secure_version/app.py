@@ -110,6 +110,10 @@ def logout():
 
 @app.route("/search")
 def search():
+    # Require login before searching
+    if not session.get("username"):
+        return redirect(url_for("login"))
+
     q = request.args.get("q", "")
     results = []
     error = None
@@ -174,6 +178,33 @@ def admin_add_user():
 def admin_delete_user(user_id):
     db = get_db()
     db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    db.commit()
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/products/add", methods=["POST"])
+@admin_required
+def admin_add_product():
+    name = request.form.get("name", "").strip()
+    category = request.form.get("category", "").strip()
+
+    if name and category:
+        db = get_db()
+        # FIXED: parameterized query
+        db.execute(
+            "INSERT INTO products (name, category) VALUES (?, ?)",
+            (name, category),
+        )
+        db.commit()
+
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/products/<int:product_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_product(product_id):
+    db = get_db()
+    db.execute("DELETE FROM products WHERE id = ?", (product_id,))
     db.commit()
     return redirect(url_for("admin_dashboard"))
 
