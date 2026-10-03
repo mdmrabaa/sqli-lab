@@ -82,4 +82,12 @@
     {% endfor %}
   </table>
 </div>
+
+<hr>
+
+<div class="card">
+  <h3>Lab Settings</h3>
+  <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">Reset the database to its original seed data. This will delete all users and products and re-create the defaults.</p>
+  <a href="{{ url_for('reset') }}" class="btn danger">Reset Database</a>
+</div>
 {% endblock %}
