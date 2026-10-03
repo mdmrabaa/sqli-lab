@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Product Search</h1>
-<p class="subtitle">Search products by category</p>
+<p class="subtitle">Search products by category — injection is blocked here</p>
 
 <div class="card">
   <form method="get">
     <label>Category</label>
-    <input type="text" name="q" value="{{ q }}" placeholder="e.g. electronics">
+    <input type="text" name="q" value="{{ q }}" placeholder="electronics or home">
     <button type="submit">Search</button>
   </form>
 </div>
@@ -23,4 +23,6 @@
   </table>
 </div>
 {% endif %}
+
+<p class="hint">Valid categories only: <code>electronics</code> &nbsp; <code>home</code></p>
 {% endblock %}

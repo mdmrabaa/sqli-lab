@@ -264,7 +264,7 @@ sqli-lab/
 │   ├── app.py
 │   ├── requirements.txt
 │   └── templates/
-│       ├── base.html        # Shared layout (nav, banner, styles)
+│       ├── base.html        # Shared layout (nav, banner, styles, animations)
 │       ├── index.html
 │       ├── login.html
 │       ├── search.html

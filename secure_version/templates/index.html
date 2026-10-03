@@ -1,30 +1,53 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>SQL Injection Training Lab</h1>
-<p class="subtitle">FCS Cybersecurity Programme — Week 1</p>
+<p class="subtitle">FCS Cybersecurity Programme — Week 1 · Hardened</p>
 
 {% if session.get('username') %}
-<div class="card">
-  <h3><a href="{{ url_for('login') }}">1. Login Form</a></h3>
-  <p>Classic auth-bypass injection on a raw-concatenated query.</p>
-</div>
 
-<div class="card">
-  <h3><a href="{{ url_for('search') }}?q=electronics">2. Product Search</a></h3>
-  <p>UNION-based injection to pull data from another table.</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+  <div class="card" style="margin-bottom:0; cursor:pointer;" onclick="window.location='{{ url_for('login') }}'">
+    <div style="display:flex; align-items:flex-start; gap:14px;">
+      <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(35,134,54,0.15), rgba(88,166,255,0.1)); border:1px solid rgba(35,134,54,0.2); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--primary-300); flex-shrink:0;">01</div>
+      <div>
+        <h3 style="margin-bottom:4px;">Login Form <span style="color:var(--text-dim); font-size:12px; font-weight:400;">Parameterized</span></h3>
+        <p>Same login, now using parameterized queries. Injection payloads like <code>admin' --</code> are treated as literal text.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0; cursor:pointer;" onclick="window.location='{{ url_for('search') }}?q=electronics'">
+    <div style="display:flex; align-items:flex-start; gap:14px;">
+      <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(35,134,54,0.15), rgba(88,166,255,0.1)); border:1px solid rgba(35,134,54,0.2); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--accent-300); flex-shrink:0;">02</div>
+      <div>
+        <h3 style="margin-bottom:4px;">Product Search <span style="color:var(--text-dim); font-size:12px; font-weight:400;">Allow-Listed</span></h3>
+        <p>Category input is validated against an allow-list. UNION injection payloads are rejected with "Unknown category."</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% if session.get('role') == 'admin' %}
-<div class="card">
-  <h3><a href="{{ url_for('admin_dashboard') }}">3. Admin Panel</a></h3>
-  <p>Manage users, products, and lab settings.</p>
+<div class="card" style="cursor:pointer;" onclick="window.location='{{ url_for('admin_dashboard') }}'">
+  <div style="display:flex; align-items:center; gap:14px;">
+    <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(88,166,255,0.15), rgba(35,134,54,0.1)); border:1px solid rgba(88,166,255,0.2); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--accent-300); flex-shrink:0;">03</div>
+    <div>
+      <h3 style="margin-bottom:4px;">Admin Panel <span style="color:var(--text-dim); font-size:12px; font-weight:400;">Management</span></h3>
+      <p>Manage users, products, and lab settings. Protected by server-side access control.</p>
+    </div>
+  </div>
 </div>
 {% endif %}
 
 {% else %}
-<div class="card">
-  <h3>Welcome to the FCS SQLi Lab</h3>
-  <p>Please <a href="{{ url_for('login') }}">log in</a> to access the training exercises.</p>
+
+<div class="card" style="text-align:center; padding:48px 28px;">
+  <div style="width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg, var(--success-500), var(--accent-500)); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800; color:#fff; margin:0 auto 20px; box-shadow:0 0 30px rgba(35,134,54,0.3);">&lt;/&gt;</div>
+  <h2 style="font-size:22px; margin-bottom:10px;">Welcome to the FCS SQLi Lab</h2>
+  <p style="max-width:420px; margin:0 auto 24px; font-size:15px; line-height:1.7;">The hardened version of the lab. Try the same injection payloads — they won't work here. Log in to begin.</p>
+  <a href="{{ url_for('login') }}" class="btn" style="display:inline-flex;">Get Started &rarr;</a>
+  <p class="hint">Seed admin account: <code>admin / admin123</code></p>
 </div>
+
 {% endif %}
 {% endblock %}

@@ -18,31 +18,33 @@
   </div>
 </div>
 
-<div class="card">
-  <h3>Add User</h3>
-  <form method="post" action="{{ url_for('admin_add_user') }}">
-    <label>Username</label>
-    <input type="text" name="username" required>
-    <label>Password</label>
-    <input type="text" name="password" required>
-    <label>Role</label>
-    <select name="role">
-      <option value="user">user</option>
-      <option value="admin">admin</option>
-    </select>
-    <button type="submit">Add User</button>
-  </form>
-</div>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+  <div class="card" style="margin-bottom:0;">
+    <h3>Add User</h3>
+    <form method="post" action="{{ url_for('admin_add_user') }}">
+      <label>Username</label>
+      <input type="text" name="username" required>
+      <label>Password</label>
+      <input type="text" name="password" required>
+      <label>Role</label>
+      <select name="role">
+        <option value="user">user</option>
+        <option value="admin">admin</option>
+      </select>
+      <button type="submit">Add User</button>
+    </form>
+  </div>
 
-<div class="card">
-  <h3>Add Product</h3>
-  <form method="post" action="{{ url_for('admin_add_product') }}">
-    <label>Product Name</label>
-    <input type="text" name="name" required>
-    <label>Category</label>
-    <input type="text" name="category" required>
-    <button type="submit">Add Product</button>
-  </form>
+  <div class="card" style="margin-bottom:0;">
+    <h3>Add Product</h3>
+    <form method="post" action="{{ url_for('admin_add_product') }}">
+      <label>Product Name</label>
+      <input type="text" name="name" required>
+      <label>Category</label>
+      <input type="text" name="category" required>
+      <button type="submit" style="margin-top:4px;">Add Product</button>
+    </form>
+  </div>
 </div>
 
 <div class="card">
@@ -87,7 +89,7 @@
 
 <div class="card">
   <h3>Lab Settings</h3>
-  <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">Reset the database to its original seed data. This will delete all users and products and re-create the defaults.</p>
+  <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 14px;">Reset the database to its original seed data. This will delete all users and products and re-create the defaults.</p>
   <a href="{{ url_for('reset') }}" class="btn danger">Reset Database</a>
 </div>
 {% endblock %}
