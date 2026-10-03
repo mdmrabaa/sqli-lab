@@ -1,7 +1,7 @@
-# SQL Injection Training Lab
+# FCS — SQL Injection Training Lab
 
-A tiny Flask app built for Week 1 (SQL Injection) of the cybersecurity
-training programme. It ships in two versions:
+A modern Flask app built for the FCS cybersecurity training programme
+(Week 1 — SQL Injection). It ships in two versions:
 
 - **`app/`** — intentionally vulnerable (raw string-concatenated SQL)
 - **`secure_version/`** — hardened (parameterized queries + allow-list)
@@ -9,7 +9,7 @@ training programme. It ships in two versions:
 Both are the same two endpoints (`/login`, `/search`) so you can run the
 exact same payloads before and after hardening and see the difference.
 
-> ⚠ **Use only in a supervised training context.** No real user data,
+> **Use only in a supervised training context.** No real user data,
 > no reused passwords, and don't point scanners at it from outside the
 > course. Treat the deployed URL as a shared lab resource, not a
 > production app.
@@ -20,7 +20,7 @@ exact same payloads before and after hardening and see the difference.
 cd sqli-lab
 git init
 git add .
-git commit -m "SQLi training lab (vulnerable + hardened versions)"
+git commit -m "FCS SQLi training lab (vulnerable + hardened versions)"
 git branch -M main
 git remote add origin https://github.com/<your-username>/sqli-lab.git
 git push -u origin main
@@ -28,16 +28,12 @@ git push -u origin main
 
 ## 2. Deploy online with Render (free tier)
 
-You asked to test this online rather than locally — Render's free web
-service tier works well here since the app is a single lightweight
-Flask process with a SQLite file.
-
-1. Go to https://render.com, sign in, and click **New → Web Service**.
+1. Go to https://render.com, sign in, and click **New -> Web Service**.
 2. Connect the GitHub repo you just pushed.
 3. Render will detect `render.yaml` and pre-fill the settings
    (root dir `app`, build `pip install -r requirements.txt`, start
    `gunicorn app:app`). If it doesn't auto-detect, set those manually.
-4. Deploy. You'll get a URL like `https://sqli-training-lab.onrender.com`.
+4. Deploy. You'll get a URL like `https://fcs-sqli-lab.onrender.com`.
 5. Visit `/reset` once after the first deploy to seed the database
    (it also auto-seeds on first run).
 
@@ -69,13 +65,12 @@ or:
 ```
 ' OR '1'='1
 ```
-Both return a successful login without knowing the real password. The
-page shows the exact query that ran, so students can see why it broke.
+Both return a successful login without knowing the real password.
 
 ### Endpoint 2 — UNION-based extraction (`/search?q=...`)
 The query is:
 ```sql
-SELECT name, category, price FROM products WHERE category = '<input>'
+SELECT id, name, category FROM products WHERE category = '<input>'
 ```
 Try as the search box value:
 ```
@@ -93,12 +88,25 @@ count first, e.g. with `' ORDER BY 4 --` to find where it breaks).
 - `/login` uses `?` placeholders instead of string formatting, so
   `admin' --` is treated as a literal username that doesn't exist.
 - `/search` validates `q` against an allow-list (`electronics`,
-  `fitness`, `office`) *and* uses placeholders, so the UNION payload
+  `home`) *and* uses placeholders, so the UNION payload
   is rejected outright with "Unknown category."
 
 Run the exact same payloads from Section 3 against the hardened
-deployment and confirm both fail — that's the Séance 3 "defense"
-deliverable.
+deployment and confirm both fail — that's the defense deliverable.
+
+## Admin Panel
+
+Both versions include a session-based admin panel at `/admin`:
+
+- **Login** with `admin / admin123` to access it
+- **Add users** — create new accounts with a chosen role (user/admin)
+- **Delete users** — remove accounts from the panel
+- **View products** — see the current product catalog
+- **Stats dashboard** — see total users, products, and admin count
+
+The admin panel is protected by a server-side `admin_required` decorator that
+checks `session["role"] == "admin"`. It is intentionally **not** injectable —
+it's the feature you build and defend, not the exercise.
 
 ## Local run (optional, if you ever want to sanity-check before pushing)
 
@@ -108,19 +116,6 @@ pip install -r requirements.txt
 python app.py
 # visit http://localhost:5000
 ```
-
-## Admin Panel
-
-Both versions now include a session-based admin panel at `/admin`:
-
-- **Login** with `admin / admin123` to access it
-- **Add users** — create new accounts with a chosen role (user/admin)
-- **Delete users** — remove accounts from the panel
-- **View products** — see the current product catalog
-
-The admin panel is protected by a server-side `admin_required` decorator that
-checks `session["role"] == "admin"`. It is intentionally **not** injectable —
-it's the feature you build and defend, not the exercise.
 
 ## Files
 

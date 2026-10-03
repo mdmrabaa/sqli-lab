@@ -1,10 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Admin Panel</h1>
-<p>Logged in as <strong>{{ admin }}</strong>.</p>
+<p class="subtitle">Logged in as <strong>{{ admin }}</strong></p>
+
+<div class="stats">
+  <div class="stat">
+    <div class="value">{{ users|length }}</div>
+    <div class="label">Total Users</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ products|length }}</div>
+    <div class="label">Total Products</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</div>
+    <div class="label">Admins</div>
+  </div>
+</div>
 
 <div class="card">
-  <h3>Add user</h3>
+  <h3>Add User</h3>
   <form method="post" action="{{ url_for('admin_add_user') }}">
     <label>Username</label>
     <input type="text" name="username" required>
@@ -15,7 +30,7 @@
       <option value="user">user</option>
       <option value="admin">admin</option>
     </select>
-    <button type="submit">Add user</button>
+    <button type="submit">Add User</button>
   </form>
 </div>
 
@@ -27,10 +42,10 @@
     <tr>
       <td>{{ u['id'] }}</td>
       <td>{{ u['username'] }}</td>
-      <td>{{ u['role'] }}</td>
+      <td><span class="badge {{ u['role'] }}">{{ u['role'] }}</span></td>
       <td>
-        <form class="inline" method="post" action="{{ url_for('admin_delete_user', user_id=u['id']) }}">
-          <button type="submit">Delete</button>
+        <form class="inline-form" method="post" action="{{ url_for('admin_delete_user', user_id=u['id']) }}">
+          <button type="submit" class="danger small">Delete</button>
         </form>
       </td>
     </tr>

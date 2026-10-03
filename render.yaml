@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sqli-training-lab
+    name: fcs-sqli-lab
     env: python
     plan: free
     rootDir: app

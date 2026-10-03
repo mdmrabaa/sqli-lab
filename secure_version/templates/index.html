@@ -1,10 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>SQL Injection Training Lab</h1>
-<p><a href="{{ url_for('login') }}">1. Login form</a> — classic auth-bypass injection on a raw-concatenated query.</p>
-<p><a href="{{ url_for('search') }}?q=electronics">2. Product search</a> — UNION-based injection to pull data from another table.</p>
+<p class="subtitle">FCS Cybersecurity Programme — Week 1</p>
+
+<div class="card">
+  <h3><a href="{{ url_for('login') }}">1. Login Form</a></h3>
+  <p>Classic auth-bypass injection on a raw-concatenated query.</p>
+</div>
+
+<div class="card">
+  <h3><a href="{{ url_for('search') }}?q=electronics">2. Product Search</a></h3>
+  <p>UNION-based injection to pull data from another table.</p>
+</div>
+
 {% if session.get('role') == 'admin' %}
-<p><a href="{{ url_for('admin_dashboard') }}">3. Admin panel</a> — manage users (visible only when logged in as admin).</p>
+<div class="card">
+  <h3><a href="{{ url_for('admin_dashboard') }}">3. Admin Panel</a></h3>
+  <p>Manage users and view the product catalog.</p>
+</div>
 {% endif %}
-<p><a href="{{ url_for('reset') }}">Reset database</a> to the original seed data.</p>
+
+<div class="card">
+  <p><a href="{{ url_for('reset') }}">Reset database</a> to the original seed data.</p>
+</div>
 {% endblock %}

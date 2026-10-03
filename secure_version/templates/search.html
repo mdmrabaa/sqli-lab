@@ -1,18 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Product Search</h1>
-<form method="get" class="card">
-  <label>Category</label>
-  <input type="text" name="q" value="{{ q }}">
-  <button type="submit">Search</button>
-</form>
+<p class="subtitle">Search products by category</p>
+
+<div class="card">
+  <form method="get">
+    <label>Category</label>
+    <input type="text" name="q" value="{{ q }}" placeholder="e.g. electronics">
+    <button type="submit">Search</button>
+  </form>
+</div>
+
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
 {% if results %}
-<table>
-  <tr><th>ID</th><th>Name</th><th>Category</th></tr>
-  {% for r in results %}
-  <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td></tr>
-  {% endfor %}
-</table>
+<div class="card">
+  <table>
+    <tr><th>ID</th><th>Name</th><th>Category</th></tr>
+    {% for r in results %}
+    <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
 {% endif %}
 {% endblock %}
