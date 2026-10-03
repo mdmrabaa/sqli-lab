@@ -100,7 +100,13 @@ The `app/` version includes a built-in toggle so you can switch
 between vulnerable and hardened mode **without changing code** —
 perfect for live classroom demos.
 
-### How to switch
+### Method 1: Toggle Button (Easiest)
+
+The navigation bar shows a **VULNERABLE** or **HARDENED** badge.
+Click it to instantly switch modes. The page reloads and the badge
+updates to show the current mode.
+
+### Method 2: Environment Variable
 
 **Vulnerable mode (default):**
 ```bash
@@ -127,13 +133,34 @@ cd app
 SECURE_MODE=1 python app.py
 ```
 
+### Method 3: Edit on GitHub (Manual)
+
+If you want to switch the mode directly on GitHub:
+
+1. Go to your repo: `https://github.com/<your-username>/sqli-lab`
+2. Click on **`app/app.py`**
+3. Click the **pencil icon** (Edit this file) at the top right
+4. Find this line:
+   ```python
+   SECURE_MODE = os.environ.get("SECURE_MODE", "0") == "1"
+   ```
+5. Change it to:
+   ```python
+   SECURE_MODE = True   # Hardened mode
+   ```
+   or:
+   ```python
+   SECURE_MODE = False  # Vulnerable mode
+   ```
+6. Scroll down and click **"Commit changes"**
+7. If deployed on Render, it will auto-deploy the change
+
 ### Demo flow for students
 
 1. Start in **vulnerable mode** — run the payloads, show they work
-2. Stop the server
-3. Start in **hardened mode** (`SECURE_MODE=1`) — run the **same payloads**
-4. Show students the payloads now fail
-5. Open the code and highlight the one-line difference:
+2. Click the **HARDENED** button in the nav bar (or restart with `SECURE_MODE=1`)
+3. Run the **same payloads** — show they now fail
+4. Open the code and highlight the one-line difference:
    ```python
    # Vulnerable
    query = f"SELECT * FROM users WHERE username = '{username}'"
@@ -143,11 +170,23 @@ SECURE_MODE=1 python app.py
    db.execute("SELECT * FROM users WHERE username = ?", (username,))
    ```
 
+## 6. User Registration
+
+Students can now register their own accounts before logging in:
+
+- Go to the **Register** page from the login screen
+- Choose a username and password
+- New accounts are created with the `user` role by default
+- Only the admin (you) can create other admins or manage the lab
+
+The admin account is pre-seeded and cannot be discovered from the UI.
+Only you know the admin credentials.
+
 ## Admin Panel
 
 Both versions include a session-based admin panel at `/admin`:
 
-- **Login** with `admin / admin123` to access it
+- **Login** with your admin account to access it
 - **Add users** — create new accounts with a chosen role (user/admin)
 - **Delete users** — remove accounts from the panel
 - **Add products** — add new products with name and category
@@ -167,7 +206,7 @@ search without logging in, you'll be redirected to the login page.
 This teaches students that access control is a separate layer from
 input validation — both are needed for a secure app.
 
-## 6. How to Protect Against SQL Injection
+## 7. How to Protect Against SQL Injection
 
 SQL injection happens when user input is concatenated directly into
 SQL queries. Here's how to prevent it:
@@ -267,6 +306,7 @@ sqli-lab/
 │       ├── base.html        # Shared layout (nav, banner, styles, animations)
 │       ├── index.html
 │       ├── login.html
+│       ├── register.html
 │       ├── search.html
 │       └── admin.html       # Admin panel
 ├── secure_version/           # HARDENED version
@@ -276,6 +316,7 @@ sqli-lab/
 │       ├── base.html
 │       ├── index.html
 │       ├── login.html
+│       ├── register.html
 │       ├── search.html
 │       └── admin.html
 └── README.md

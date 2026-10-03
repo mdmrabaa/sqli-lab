@@ -34,7 +34,7 @@ def init_db():
 
         CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
+            username TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'user'
         );
@@ -46,13 +46,9 @@ def init_db():
         );
         """
     )
-    db.executemany(
+    db.execute(
         "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-        [
-            ("admin", "admin123", "admin"),
-            ("alice", "alice123", "user"),
-            ("bob", "bob123", "user"),
-        ],
+        ("admin", "admin123", "admin"),
     )
     db.executemany(
         "INSERT INTO products (name, category) VALUES (?, ?)",
@@ -75,6 +71,30 @@ if not os.path.exists(DB_PATH):
 @app.route("/")
 def index():
     return render_template("index.html", user=session.get("username"), role=session.get("role"))
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+
+        if not username or not password:
+            error = "Username and password are required"
+        else:
+            db = get_db()
+            try:
+                db.execute(
+                    "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                    (username, password, "user"),
+                )
+                db.commit()
+                return redirect(url_for("login"))
+            except sqlite3.IntegrityError:
+                error = "Username already exists"
+
+    return render_template("register.html", error=error)
 
 
 @app.route("/login", methods=["GET", "POST"])
